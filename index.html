@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0"/>
+
+  <title>英単語アプリ</title>
+
+  <style>
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+      background:linear-gradient(to bottom,#4facfe,#00f2fe);
+      min-height:100vh;
+      padding:20px;
+      color:white;
+    }
+
+    .app{
+      max-width:420px;
+      margin:auto;
+    }
+
+    .title{
+      text-align:center;
+      font-size:32px;
+      font-weight:bold;
+      margin-bottom:20px;
+    }
+
+    .card{
+      background:white;
+      color:#111;
+      border-radius:28px;
+      padding:60px 20px;
+      text-align:center;
+      box-shadow:0 10px 30px rgba(0,0,0,0.15);
+      transition:0.25s;
+      user-select:none;
+    }
+
+    .word{
+      font-size:42px;
+      font-weight:bold;
+      margin-bottom:20px;
+    }
+
+    .meaning{
+      font-size:24px;
+      color:#666;
+      min-height:40px;
+    }
+
+    .panel{
+      background:rgba(255,255,255,0.15);
+      backdrop-filter:blur(10px);
+      border-radius:24px;
+      padding:20px;
+      margin-top:20px;
+    }
+
+    input{
+      width:100%;
+      padding:14px;
+      border:none;
+      border-radius:14px;
+      margin-bottom:12px;
+      font-size:16px;
+    }
+
+    button{
+      width:100%;
+      border:none;
+      border-radius:14px;
+      padding:14px;
+      font-size:17px;
+      font-weight:bold;
+      margin-top:10px;
+      cursor:pointer;
+    }
+
+    .addBtn{
+      background:#34c759;
+      color:white;
+    }
+
+    .resetBtn{
+      background:#ff3b30;
+      color:white;
+    }
+
+    .info{
+      margin-top:16px;
+      text-align:center;
+      line-height:1.8;
+      font-size:15px;
+    }
+
+    .count{
+      text-align:center;
+      margin-top:14px;
+      font-size:18px;
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">
+
+<meta name="theme-color" content="#4facfe">
+
+<link rel="apple-touch-icon" href="icon.png">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<meta name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent">
+</head>
+
+<body>
+
+<div class="app">
+
+  <div class="title">
+    英単語アプリ
+  </div>
+
+  <div class="card" id="card">
+
+    <div class="word" id="word"></div>
+
+    <div class="meaning" id="meaning">
+      タップで意味表示
+    </div>
+
+  </div>
+
+  <div class="count">
+    単語数:
+    <span id="count"></span>
+  </div>
+
+  <div class="info">
+    👉右スワイプ = 覚えた<br>
+    👈左スワイプ = 次へ<br>
+    👆タップ = 意味表示
+  </div>
+
+  <div class="panel">
+
+    <input
+      type="text"
+      id="englishInput"
+      placeholder="英単語"
+    >
+
+    <input
+      type="text"
+      id="japaneseInput"
+      placeholder="日本語"
+    >
+
+    <button class="addBtn" onclick="addWord()">
+      単語追加
+    </button>
+
+    <button class="resetBtn" onclick="resetWords()">
+      初期化
+    </button>
+
+  </div>
+
+</div>
+
+<script>
+
+const defaultWords = [
+  { english:"apple", japanese:"りんご" },
+  { english:"book", japanese:"本" },
+  { english:"beautiful", japanese:"美しい" }
+];
+
+let words =
+  JSON.parse(localStorage.getItem("words"))
+  || defaultWords;
+
+let currentIndex = 0;
+
+const card = document.getElementById("card");
+const wordEl = document.getElementById("word");
+const meaningEl = document.getElementById("meaning");
+const countEl = document.getElementById("count");
+
+function saveWords(){
+  localStorage.setItem(
+    "words",
+    JSON.stringify(words)
+  );
+}
+
+function updateCount(){
+  countEl.textContent = words.length;
+}
+
+function showWord(){
+
+  if(words.length === 0){
+    wordEl.textContent = "単語なし";
+    meaningEl.textContent = "";
+    return;
+  }
+
+  wordEl.textContent =
+    words[currentIndex].english;
+
+  meaningEl.textContent =
+    "タップで意味表示";
+
+  card.style.transform = "";
+
+  updateCount();
+}
+
+function showMeaning(){
+  meaningEl.textContent =
+    words[currentIndex].japanese;
+}
+
+function nextWord(){
+
+  currentIndex++;
+
+  if(currentIndex >= words.length){
+    currentIndex = 0;
+  }
+
+  showWord();
+}
+
+function addWord(){
+
+  const english =
+    document.getElementById("englishInput")
+    .value.trim();
+
+  const japanese =
+    document.getElementById("japaneseInput")
+    .value.trim();
+
+  if(!english || !japanese){
+    alert("両方入力してね");
+    return;
+  }
+
+  words.push({
+    english,
+    japanese
+  });
+
+  saveWords();
+  updateCount();
+
+  document.getElementById("englishInput").value="";
+  document.getElementById("japaneseInput").value="";
+
+  alert("追加した！");
+}
+
+function resetWords(){
+
+  if(confirm("全部リセットする？")){
+
+    words = [...defaultWords];
+
+    saveWords();
+
+    currentIndex = 0;
+
+    showWord();
+  }
+}
+
+card.addEventListener("click", showMeaning);
+
+let startX = 0;
+let currentX = 0;
+
+card.addEventListener("touchstart", e => {
+  startX = e.touches[0].clientX;
+});
+
+card.addEventListener("touchmove", e => {
+
+  currentX = e.touches[0].clientX;
+
+  const diff = currentX - startX;
+
+  card.style.transform =
+    `translateX(${diff}px)
+     rotate(${diff/20}deg)`;
+});
+
+card.addEventListener("touchend", () => {
+
+  const diff = currentX - startX;
+
+  if(diff > 120){
+
+    card.style.transform =
+      "translateX(500px) rotate(20deg)";
+
+    setTimeout(() => {
+      nextWord();
+    },200);
+
+  }else if(diff < -120){
+
+    card.style.transform =
+      "translateX(-500px) rotate(-20deg)";
+
+    setTimeout(() => {
+      nextWord();
+    },200);
+
+  }else{
+    card.style.transform = "";
+  }
+});
+
+showWord();
+
+</script>
+<script>
+
+if ("serviceWorker" in navigator) {
+
+  navigator.serviceWorker
+    .register("./sw.js")
+    .then(() => {
+      console.log("Service Worker 登録成功");
+    });
+
+}
+
+</script>
+
+</body>
+</html>
